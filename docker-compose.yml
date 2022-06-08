@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: jaeger.boyzcraft_dev
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    networks:
+     default:
+      ipv4_address: 10.2.22.52  
+  mysql:
+      image: mariadb
+      # ports:
+      #    - 10.2.2.1:3306:3306
+      volumes:
+        - ./mysql:/var/lib/mysql
+      environment:
+        MYSQL_ROOT_PASSWORD: pass
+        MYSQL_DATABASE: db
+        MYSQL_USER: user
+        MYSQL_PASSWORD: pass
+      restart: always
+      networks:
+       default:
+        ipv4_address: 10.2.22.62
+  dle.php.trace:
+    container_name: dle.php.trace
+    image: dle:upd1
+    volumes:
+      - ./html_trace:/var/www/html
+      - ./log/dle.php.trace:/var/log
+    restart: always
+    networks:
+     default:
+      ipv4_address: 10.2.22.61
+
+      
+  nginx-dle.php.trace:
+    container_name: nginx-dle.php.trace
+    image: opentracing/nginx-opentracing
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/jaeger-config.json:/etc/jaeger-config.json
+      - ./html_trace:/var/www/html
+      - ./log/nginx:/var/log/nginx
+    restart: always
+    networks:
+     default:
+      ipv4_address: 10.2.22.60  
+networks:
+ default:
+        name: gzx_docker_dev
+        ipam:
+            driver: default
+            config:
+             - subnet: 10.2.22.0/24
+               gateway: 10.2.22.1
+               
